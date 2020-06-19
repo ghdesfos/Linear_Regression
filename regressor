@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+
+from sys import argv
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import argparse
+import csv
+
+
+class LinearRegression:
+	def __init__(self):
+		self._avg = []
+		self._max = []
+		self._min = []
+
+	def regularize_variables(self, X):
+		X_reg = X.copy()
+		for i in range(len(X_reg.columns)):
+			if self._max[i] != self._min[i]:
+				X_reg.iloc[:, i] = (X_reg.iloc[:, i] - self._avg[i]) / (self._max[i] - self._min[i])
+		return X_reg
+
+	def create_regularization_parameters(self, X):
+		for i in range(len(X.columns)):
+			col = X.iloc[:, i]
+			avg = col.mean()
+			maxi = col.max()
+			mini = col.min()
+			self._avg.append(avg)
+			self._max.append(maxi)
+			self._min.append(mini)
+
+	def compute_cost(self, theta, X, y):
+		m = len(X)
+		error = X @ theta - y
+		cost = 1 / (2 * m) * error.T @ error
+		return cost
+
+	def step_gradient(self, theta, X, y, alpha):
+		m = len(X)
+		gradient = 1 / m * X.T @ (X @ theta - y)
+		theta = theta - alpha * gradient
+		return theta
+
+	def launch_linear_regression(self, X, y, theta, alpha, iteration, plot = False, animate = False):
+		self.create_regularization_parameters(X)
+		X_reg = self.regularize_variables(X)
+		X_reg.insert(0, 'bias', 1)
+		stored_cost = []
+		for i in range(iteration):
+			theta = self.step_gradient(theta, X_reg, y, alpha)
+			stored_cost.append(self.compute_cost(theta, X_reg, y))
+		if plot:
+			self.plot_data_and_regression_line(theta, X, y, animate)
+		return theta, stored_cost
+
+	def plot_cost_per_iteration(self, cost, iteration):
+		plt.style.use('fivethirtyeight')
+		plt.plot(range(1, iteration + 1), cost)
+		plt.title('Cost per iteration')
+		plt.xlabel('Nb of iterations')
+		plt.ylabel('Cost')
+		plt.tight_layout()
+		plt.show()
+
+	def plot_data_and_regression_line(self, theta, X, y, animate = False):
+		plt.style.use('fivethirtyeight')
+		plt.scatter(X, y)
+		plt.title('Price per km')
+		plt.xlabel('km')
+		plt.ylabel('Price')
+
+		X_reg = self.regularize_variables(X)
+		X_reg.insert(0, 'bias', 1)
+		y_est = X_reg.dot(theta)
+		plt.plot(X, y_est)
+		plt.show()
+
+
+
+ALPHA =					1
+ITERATION =				100
+START_THETA =			np.zeros(2)
+DEFAULT_DATA_FILE =		'data.csv'
+DEFAULT_OUTPUT_FILE =	'params.csv'
+
+def parse():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-p', '--plot', action='store_true')
+	parser.add_argument('-a', '--animate', action='store_true')
+	parser.add_argument('input', nargs='?', default = DEFAULT_DATA_FILE)
+	args = parser.parse_args()
+	return args
+
+
+def get_data(args):
+	try:
+		data = pd.read_csv(args.input, header = 0)
+	except FileNotFoundError as e:
+		print(argv[0], ':', e)
+		exit(1)
+	data_input = pd.DataFrame(data['km'])
+	data_output = data['price']
+	return data_input, data_output
+
+
+def save_model(theta, linear_reg, model_name = DEFAULT_OUTPUT_FILE):
+	with open(model_name, mode = 'w') as model_file:
+		writer = csv.writer(model_file)
+		writer.writerow(theta)
+		writer.writerow([linear_reg._avg[0], linear_reg._max[0], linear_reg._min[0]])
+
+
+def main():
+	args = parse()
+	data_input, data_output = get_data(args)
+	linear_reg = LinearRegression()
+	theta, cost = linear_reg.launch_linear_regression(data_input, data_output, START_THETA, ALPHA, ITERATION, args.plot, args.animate)
+#	reg.plot_cost_per_iteration(cost, ITERATION)
+	save_model(theta, linear_reg)
+
+
+if __name__ == '__main__':
+	main()

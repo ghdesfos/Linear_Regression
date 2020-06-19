@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+from sys import argv
+import argparse
+import csv
+import numpy as np
+
+
+DEFAULT_INPUT_FILE = 'params.csv'
+
+def parse():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('input', nargs='?', default=DEFAULT_INPUT_FILE)
+	args = parser.parse_args()
+	return args
+
+
+def load_model(model_name = DEFAULT_INPUT_FILE):
+	try:
+		with open(model_name, mode = 'r') as model_file:
+			reader = csv.reader(model_file)
+
+			row = next(reader)
+			if len(row) != 2:
+				raise Exception
+			thetas = np.array(row)
+			thetas = thetas.astype(np.float)
+
+			row = next(reader)
+			if len(row) != 3:
+				raise Exception
+			reg_params = np.array(row)
+			reg_params = reg_params.astype(np.float)
+
+			return thetas, reg_params
+
+	except FileNotFoundError as e:
+		print(argv[0], ':', e)
+		exit(1)
+	except Exception as e:
+		print(e)
+		print('No valid elements in the file, the price cannot be estimated')
+		exit(1)
+
+
+def estimate_price(X, thetas, reg_params):
+	X[1] = (X[1] - reg_params[0]) / (reg_params[1] - reg_params[2])
+	price = X @ thetas
+	return price
+
+
+if __name__ == '__main__':
+	args = parse()
+	thetas, reg_params = load_model(args.input)
+
+	milage = float(input('Enter a car milage: '))
+	price = estimate_price(np.array([1, milage]), thetas, reg_params)
+	
+	print('Estimated price:', int(price))
