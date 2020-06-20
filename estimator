@@ -38,7 +38,6 @@ def load_model(model_name = DEFAULT_INPUT_FILE):
 		print(argv[0], ':', e)
 		exit(1)
 	except Exception as e:
-		print(e)
 		print('No valid elements in the file, the price cannot be estimated')
 		exit(1)
 
@@ -49,7 +48,7 @@ def estimate_price(X, thetas, reg_params):
 	return price
 
 
-if __name__ == '__main__':
+def estimator():
 	args = parse()
 	thetas, reg_params = load_model(args.input)
 
@@ -57,3 +56,7 @@ if __name__ == '__main__':
 	price = estimate_price(np.array([1, milage]), thetas, reg_params)
 	
 	print('Estimated price:', int(price))
+
+
+if __name__ == '__main__':
+	estimator()

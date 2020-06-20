@@ -44,19 +44,24 @@ class LinearRegression:
 		theta = theta - alpha * gradient
 		return theta
 
-	def launch_linear_regression(self, X, y, theta, alpha, iteration, plot = False, animate = False):
+	def launch_linear_regression(self, X, y, theta, alpha, iteration, plot = False, animate = False, cost = False):
 		self.create_regularization_parameters(X)
 		X_reg = self.regularize_variables(X)
 		X_reg.insert(0, 'bias', 1)
+		thetas = []
 		stored_cost = []
 		for i in range(iteration):
 			theta = self.step_gradient(theta, X_reg, y, alpha)
+			thetas.append(theta)
 			stored_cost.append(self.compute_cost(theta, X_reg, y))
 		if plot:
-			self.plot_data_and_regression_line(theta, X, y, animate)
+			self.plot_data_and_regression_line(X, y, theta, thetas, iteration, animate)
+		if cost:
+			self.plot_cost_per_iteration(stored_cost, iteration)
 		return theta, stored_cost
 
 	def plot_cost_per_iteration(self, cost, iteration):
+		print(f'Final cost after {iteration} iterations:', round(cost[iteration - 1], 2))
 		plt.style.use('fivethirtyeight')
 		plt.plot(range(1, iteration + 1), cost)
 		plt.title('Cost per iteration')
@@ -65,17 +70,39 @@ class LinearRegression:
 		plt.tight_layout()
 		plt.show()
 
-	def plot_data_and_regression_line(self, theta, X, y, animate = False):
+	def plot_data_and_regression_line(self, X, y, final_theta, thetas, iteration, animate = False):
+		fig = plt.figure()
 		plt.style.use('fivethirtyeight')
-		plt.scatter(X, y)
-		plt.title('Price per km')
-		plt.xlabel('km')
-		plt.ylabel('Price')
+		ax = fig.add_subplot()
 
 		X_reg = self.regularize_variables(X)
 		X_reg.insert(0, 'bias', 1)
-		y_est = X_reg.dot(theta)
-		plt.plot(X, y_est)
+
+		if animate :
+			plt.ion()
+			for i in range(iteration):
+				plt.cla()
+				plt.scatter(X, y)
+				y_est = X_reg @ thetas[i]
+				plt.plot(X, y_est, color='red', linewidth=2)
+				plt.text(-0.05, 1.05, f'iterations={i + 1}', transform = ax.transAxes)
+				ax.title.set_text('Price per km')
+				ax.set_xlabel('km')
+				ax.set_ylabel('Price')
+				plt.tight_layout()
+				plt.draw()
+				plt.pause(0.0000000001)
+			plt.ioff()
+
+		plt.cla()
+		plt.scatter(X, y)
+		y_est = X_reg @ final_theta
+		plt.plot(X, y_est, color='red', linewidth=2)
+		plt.text(-0.05, 1.05, f'iterations={iteration}', transform = ax.transAxes)
+		ax.title.set_text('Price per km')
+		ax.set_xlabel('km')
+		ax.set_ylabel('Price')
+		plt.tight_layout()
 		plt.show()
 
 
@@ -90,6 +117,7 @@ def parse():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-p', '--plot', action='store_true')
 	parser.add_argument('-a', '--animate', action='store_true')
+	parser.add_argument('-c', '--cost', action='store_true')
 	parser.add_argument('input', nargs='?', default = DEFAULT_DATA_FILE)
 	args = parser.parse_args()
 	return args
@@ -113,14 +141,13 @@ def save_model(theta, linear_reg, model_name = DEFAULT_OUTPUT_FILE):
 		writer.writerow([linear_reg._avg[0], linear_reg._max[0], linear_reg._min[0]])
 
 
-def main():
+def regressor():
 	args = parse()
 	data_input, data_output = get_data(args)
 	linear_reg = LinearRegression()
-	theta, cost = linear_reg.launch_linear_regression(data_input, data_output, START_THETA, ALPHA, ITERATION, args.plot, args.animate)
-#	reg.plot_cost_per_iteration(cost, ITERATION)
+	theta, cost = linear_reg.launch_linear_regression(data_input, data_output, START_THETA, ALPHA, ITERATION, args.plot, args.animate, args.cost)
 	save_model(theta, linear_reg)
 
 
 if __name__ == '__main__':
-	main()
+	regressor()
