@@ -41,4 +41,5 @@ optional arguments:
 ```
 
 The regressor first trains on input data, and then save the optimised thetas parameters into a file.
+
 The estimator reads the parameters from the latter file, and then asks to the user a value to do a prediction on.
