@@ -6,6 +6,7 @@ After data normalization, parameters are calculated and stored.
 ![regression](img/linear_regression_animation.gif)
 
 ## Requirements
+* Python 3.7.4
 * Numpy
 * Pandas
 * Matplotlib
