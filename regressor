@@ -115,10 +115,10 @@ DEFAULT_OUTPUT_FILE =	'params.csv'
 
 def parse():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-p', '--plot', action='store_true')
-	parser.add_argument('-a', '--animate', action='store_true')
-	parser.add_argument('-c', '--cost', action='store_true')
-	parser.add_argument('input', nargs='?', default = DEFAULT_DATA_FILE)
+	parser.add_argument('-p', '--plot', action='store_true', help='plot the data and the regression line')
+	parser.add_argument('-a', '--animate', action='store_true', help='show evolution of regression line across iterations, option -p must be turned on')
+	parser.add_argument('-c', '--cost', action='store_true', help='plot evolution of the cost function values across iterations')
+	parser.add_argument('input', nargs='?', default = DEFAULT_DATA_FILE, help='csv input file')
 	args = parser.parse_args()
 	return args
 

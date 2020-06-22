@@ -10,7 +10,7 @@ DEFAULT_INPUT_FILE = 'params.csv'
 
 def parse():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('input', nargs='?', default=DEFAULT_INPUT_FILE)
+	parser.add_argument('input', nargs='?', default=DEFAULT_INPUT_FILE, help='file containing the theta parameters and regularization values')
 	args = parser.parse_args()
 	return args
 
